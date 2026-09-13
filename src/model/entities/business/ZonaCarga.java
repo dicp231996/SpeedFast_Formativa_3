@@ -5,6 +5,7 @@ import model.core.Pedido;
 import model.entities.dealer.Repartidor;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -45,6 +46,8 @@ public class ZonaCarga {
     //   2) Nuevamente cuando el pedido pase a CONFIRMADO (repartidor ya
     //      asignado), momento en el que recién se habilita para ser retirado
     //      por el repartidor que tiene asignado (se encola en el BlockingQueue).
+    //      En ese momento se imprime un mensaje mostrando su ID correlativo
+    //      y dirección de entrega, para dejar visible el pool disponible.
     // El método completo es "synchronized" para proteger tanto el ArrayList
     // como la verificación de duplicados antes de encolar.
     public synchronized void agregarPedido(Pedido pedido) {
@@ -62,31 +65,47 @@ public class ZonaCarga {
         // más de una vez para el mismo pedido).
         if (pedido.getEstado() == EstadoPedido.CONFIRMADO && !pedidosConfirmados.contains(pedido)) {
             pedidosConfirmados.offer(pedido);
+            System.out.println("-> [ZONA DE CARGA] Pedido " + pedido.getId() + " disponible en el pool | Dirección de entrega: "
+                    + pedido.getDireccionEntrega());
         }
     }
 
     // =========================================================
-    // RETIRO DE PEDIDOS DESDE LA ZONA DE CARGA
+    // RETIRO DE UNA CARGA COMPLETA DESDE LA ZONA DE CARGA
     // =========================================================
-    // Un repartidor invoca este método pasándose a sí mismo para tomar,
-    // de entre los pedidos CONFIRMADOS disponibles, aquel que le fue
-    // asignado a ÉL específicamente (el primer repartidor que cumplió con
-    // validarRequisitos en la Fase 1). Al ser toda la operación atómica
-    // (método synchronized), ningún otro repartidor puede llevarse ese mismo
-    // pedido, ni este repartidor puede retirar un pedido ajeno. Devuelve
-    // null si en este instante no tiene ningún pedido propio disponible.
-    public synchronized Pedido retirarPedido(Repartidor repartidor) {
+    // Un repartidor invoca este método pasándose a sí mismo para retirar, EN
+    // UNA SOLA VISITA, TODOS los pedidos CONFIRMADOS que le fueron asignados
+    // a él específicamente (los que cumplieron validarRequisitos en la
+    // Fase 1). Con esa carga completa en la mochila, el repartidor sale a
+    // hacer su ruta; recién cuando la entrega por completo vuelve a llamar a
+    // este método por una carga nueva. Al ser toda la operación atómica
+    // (método synchronized), ningún otro repartidor puede llevarse esos
+    // mismos pedidos, ni este repartidor puede retirar pedidos ajenos.
+    // Devuelve una lista vacía si en este instante no tiene ningún pedido
+    // propio disponible.
+    public synchronized ArrayList<Pedido> retirarCarga(Repartidor repartidor) {
+        ArrayList<Pedido> carga = new ArrayList<>();
         if (repartidor == null) {
-            return null;
+            return carga;
         }
 
-        for (Pedido pedido : pedidosConfirmados) {
+        Iterator<Pedido> iterador = pedidosConfirmados.iterator();
+        while (iterador.hasNext()) {
+            Pedido pedido = iterador.next();
             if (pedido.getRepartidorAsignado() == repartidor) {
-                pedidosConfirmados.remove(pedido);
-                return pedido;
+                carga.add(pedido);
+                iterador.remove();
             }
         }
 
-        return null;
+        return carga;
+    }
+
+    // Indica si el pool completo de pedidos confirmados quedó sin nada por
+    // asignar (sin importar de qué repartidor). Se usa para distinguir entre
+    // "no tengo nada propio por ahora" (otros repartidores aún tienen lo
+    // suyo pendiente) y "ya no queda nada para nadie".
+    public synchronized boolean estaVacia() {
+        return pedidosConfirmados.isEmpty();
     }
 }

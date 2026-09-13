@@ -111,9 +111,15 @@ public class GestorFases {
                 candidato.agregarPedido(pedido);
                 // Ya no lo removemos, lo que significa que en automático el primero elegible
                 // podría llevarse muchos pedidos (comportamiento de pool abierto).
-                break;
+                return;
             }
         }
+
+        // Se recorrió toda la lista de repartidores y ninguno cumplió
+        // validarRequisitos (o todos estaban sin cupo): el pedido queda
+        // PENDIENTE de forma explícita, en vez de fallar en silencio.
+        System.out.println("-> Alerta: Pedido " + pedido.getIdPedido()
+                + " no encontró ningún repartidor elegible. Queda PENDIENTE.");
     }
 
     // =========================================================
@@ -261,9 +267,7 @@ public class GestorFases {
         System.out.println("=========================================");
 
         for (Pedido p : listaPedidos) {
-            if (p.getRepartidorAsignado() != null && !p.isCancelado()) {
-                controlador.registrarEntregaExitosa(p);
-            }
+            controlador.registrarEntregaExitosa(p);
             System.out.println("Seguimiento ID " + p.getIdPedido() + " -> " + p.rastrear());
         }
 

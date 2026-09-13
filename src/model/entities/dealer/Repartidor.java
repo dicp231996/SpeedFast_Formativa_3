@@ -57,34 +57,49 @@ public class Repartidor extends Persona implements IRunnable, Runnable {
 
     // =========================================================
     // ORQUESTACIÓN COMPLETA DEL CICLO DE ENTREGA:
-    // Retira, de la Zona de Carga compartida, ÚNICAMENTE los pedidos que le
-    // fueron asignados a este repartidor durante la Fase 1 (el primero que
-    // cumplió validarRequisitos), hasta que ya no le queden disponibles.
+    // Retira, de la Zona de Carga compartida, TODA la carga de pedidos que
+    // le fueron asignados a este repartidor durante la Fase 1 (los que
+    // cumplieron validarRequisitos) EN UNA SOLA VISITA, sale a hacer su ruta
+    // entregándolos, y solo cuando termina esa ruta completa vuelve a la
+    // Zona de Carga por una carga nueva. Si al volver no encuentra ninguna,
+    // informa si es porque el pool global ya está vacío o porque, por
+    // ahora, no tiene ninguna carga propia disponible.
     // Cada repartidor corre en su propio hilo (ver GestorFases, que
     // administra el pool vía ExecutorService), por lo que varios de ellos
-    // pueden estar retirando y entregando sus propios pedidos en simultáneo.
+    // pueden estar retirando y entregando sus propias cargas en simultáneo.
     // =========================================================
     @Override
     public void run() {
         String nombreHilo = Thread.currentThread().getName();
         System.out.println("\n>>> [ZONA DE CARGA - " + nombreHilo + "] " + this.getNombreCompleto()
-                + " comienza a retirar sus pedidos confirmados.");
+                + " comienza a retirar carga.");
 
         if (this.zonaCarga == null) {
             System.out.println("    -> No se ha vinculado ninguna Zona de Carga a este repartidor.");
             return;
         }
 
-        Pedido pedido;
-        boolean atendioAlgunPedido = false;
+        while (true) {
+            java.util.ArrayList<Pedido> carga = this.zonaCarga.retirarCarga(this);
 
-        while ((pedido = this.zonaCarga.retirarPedido(this)) != null) {
-            atendioAlgunPedido = true;
-            procesarEntrega(pedido);
-        }
+            if (carga.isEmpty()) {
+                if (this.zonaCarga.estaVacia()) {
+                    System.out.println("    -> [ZONA DE CARGA VACÍA] Ya no quedan pedidos por asignar.");
+                } else {
+                    System.out.println("    -> " + this.getNombreCompleto() + " está en espera de paquetes aptos.");
+                }
+                break;
+            }
 
-        if (!atendioAlgunPedido) {
-            System.out.println("    -> No tenía pedidos confirmados disponibles en la zona de carga.");
+            System.out.println("-> " + this.getNombreCompleto() + " retira una carga de " + carga.size()
+                    + " pedido(s) desde la zona de carga y sale a ruta.");
+
+            for (Pedido pedido : carga) {
+                procesarEntrega(pedido);
+            }
+
+            System.out.println("-> " + this.getNombreCompleto()
+                    + " completó su ruta y vuelve a la zona de carga por una carga nueva.");
         }
 
         System.out.println("\n>>> [FIN DE RUTA] " + this.getNombreCompleto() + " ha finalizado su recorrido.\n");
@@ -100,8 +115,8 @@ public class Repartidor extends Persona implements IRunnable, Runnable {
             return;
         }
 
-        System.out.println("-> [RETIRO] " + this.getNombreCompleto() + " retira su pedido "
-                + pedido.getIdPedido() + " desde la zona de carga.");
+        System.out.println("-> [ENTREGA] " + this.getNombreCompleto() + " comienza a entregar el pedido "
+                + pedido.getIdPedido() + ".");
 
         pedido.nuevoEstado(EstadoPedido.EN_REPARTO);
 

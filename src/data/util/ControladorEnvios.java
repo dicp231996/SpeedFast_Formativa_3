@@ -1,5 +1,6 @@
 package data.util;
 
+import data.enumerate.EstadoPedido;
 import model.core.Pedido;
 import model.entities.dealer.Repartidor;
 import java.util.ArrayList;
@@ -22,8 +23,11 @@ public class ControladorEnvios {
         return elegibles;
     }
 
+    // Un pedido se considera entregado exitosamente solo si su estado real
+    // es ENTREGADO (es decir, ya completó la simulación de HiloEntrega),
+    // no basta con que tenga repartidor y no esté cancelado.
     public void registrarEntregaExitosa(Pedido pedido) {
-        if (pedido.getRepartidorAsignado() != null && !pedido.isCancelado()) {
+        if (pedido.getEstado() == EstadoPedido.ENTREGADO && !entregasExitosas.contains(pedido)) {
             this.entregasExitosas.add(pedido);
         }
     }
@@ -41,5 +45,6 @@ public class ControladorEnvios {
                 System.out.println("ID: " + p.getIdPedido() + " | Entregado por: " + p.getRepartidorAsignado().getNombreCompleto());
             }
         }
+        System.out.println("\n-> Total de pedidos entregados correctamente: " + entregasExitosas.size());
     }
 }
