@@ -24,7 +24,7 @@ public abstract class Pedido implements IDespachable, ICancelable, IRastreable {
     protected boolean estadoCancelado;
     protected String motivoCancelacion;
 
-    // Estado operativo del pedido dentro de su ciclo de vida (PENDIENTE, EN_REPARTO, ENTREGADO)
+    // Estado operativo del pedido dentro de su ciclo de vida (PENDIENTE, CONFIRMADO, EN_REPARTO, ENTREGADO)
     protected EstadoPedido estado;
 
     public Pedido() {
@@ -77,7 +77,7 @@ public abstract class Pedido implements IDespachable, ICancelable, IRastreable {
 
         if (validarRequisitos(candidato)) {
             this.repartidorAsignado = candidato;
-            this.nuevoEstado(EstadoPedido.EN_REPARTO);
+            this.nuevoEstado(EstadoPedido.CONFIRMADO);
             System.out.println("-> ÉXITO: Repartidor asignado correctamente.\n");
         } else {
             System.out.println("-> RECHAZADO: El repartidor no cumple con los requisitos del pedido.\n");
@@ -88,14 +88,14 @@ public abstract class Pedido implements IDespachable, ICancelable, IRastreable {
         System.out.println("Forzando asignación nominal para el pedido " + this.idPedido + "...");
         Repartidor comodin = new Repartidor(nombre, "N/A", data.enumerate.TipoServicio.COMIDA, true, 999.0, true);
         this.repartidorAsignado = comodin;
-        this.nuevoEstado(EstadoPedido.EN_REPARTO);
+        this.nuevoEstado(EstadoPedido.CONFIRMADO);
         System.out.println("-> ÉXITO: Asignado directamente al repartidor: " + nombre + "\n");
     }
 
     // =========================================================
     // ACTUALIZACIÓN CONTROLADA DEL ESTADO DEL PEDIDO
     // Punto único de entrada para ir avanzando el pedido a través de su
-    // ciclo de vida (PENDIENTE -> EN_REPARTO -> ENTREGADO) durante la
+    // ciclo de vida (PENDIENTE -> CONFIRMADO -> EN_REPARTO -> ENTREGADO) durante la
     // ejecución del programa, dejando trazabilidad del cambio en consola.
     // =========================================================
     public void nuevoEstado(EstadoPedido estado) {

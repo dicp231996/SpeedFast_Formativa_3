@@ -22,7 +22,7 @@ public class PedidoComida extends Pedido {
     public boolean validarRequisitos(Repartidor candidato) {
         return candidato.getTipoServicio() == data.enumerate.TipoServicio.COMIDA &&
                 candidato.isEstaCercaUbicacion() &&
-                candidato.getPedidosAsignados().size() < 10;
+                candidato.tieneCupoDisponible();
     }
 
     // =========================================================

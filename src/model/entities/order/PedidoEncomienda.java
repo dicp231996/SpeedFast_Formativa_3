@@ -28,7 +28,7 @@ public class PedidoEncomienda extends Pedido {
     public boolean validarRequisitos(Repartidor candidato) {
         return candidato.getTipoServicio() == data.enumerate.TipoServicio.ENCOMIENDA &&
                 candidato.getCapacidadPesoMax() >= this.pesoKg &&
-                candidato.getPedidosAsignados().size() < 10;
+                candidato.tieneCupoDisponible();
     }
 
     // =========================================================

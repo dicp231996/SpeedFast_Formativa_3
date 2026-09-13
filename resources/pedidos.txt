@@ -3,13 +3,98 @@ PedidoComida;COM-002;Matucana 120, Estación Central;2.1
 PedidoComida;COM-003;Compañía de Jesús 2130, Santiago Centro;1.5
 PedidoComida;COM-004;Av. Brasil 450, Santiago Centro;4.0
 PedidoComida;COM-005;Catedral 1450, Santiago Centro;0.9
+PedidoComida;COM-006;Matucana 4556, Las Condes;4.3
+PedidoComida;COM-007;Av. El Bosque 1729, La Cisterna;1.8
+PedidoComida;COM-008;Av. Los Leones 1474, Cerro Navia;4.9
+PedidoComida;COM-009;Matucana 1585, La Florida;3.0
+PedidoComida;COM-010;Alameda 484, Conchalí;1.8
+PedidoComida;COM-011;Av. Rojas Magallanes 8978, La Reina;1.6
+PedidoComida;COM-012;Av. Walker Martínez 4607, Quinta Normal;1.7
+PedidoComida;COM-013;Agustinas 6974, San Joaquín;5.0
+PedidoComida;COM-014;Moneda 5564, San Miguel;2.1
+PedidoComida;COM-015;Gran Avenida 5931, Macul;1.0
+PedidoComida;COM-016;Compañía de Jesús 7577, Conchalí;4.1
+PedidoComida;COM-017;Av. La Florida 1341, Conchalí;1.2
+PedidoComida;COM-018;Av. Quilín 5975, Cerro Navia;2.2
+PedidoComida;COM-019;Catedral 800, La Cisterna;1.6
+PedidoComida;COM-020;Av. Kennedy 1357, Las Condes;1.8
+PedidoComida;COM-021;Av. La Florida 4604, Vitacura;5.7
+PedidoComida;COM-022;Av. Independencia 2714, Macul;4.3
+PedidoComida;COM-023;Av. Simón Bolívar 4424, San Bernardo;2.6
+PedidoComida;COM-024;Av. Rojas Magallanes 1219, Pudahuel;6.1
+PedidoComida;COM-025;Av. Los Leones 4060, Ñuñoa;4.3
+PedidoComida;COM-026;Av. Apoquindo 9175, Las Condes;3.2
+PedidoComida;COM-027;Av. Príncipe de Gales 966, Las Condes;4.6
+PedidoComida;COM-028;Av. Departamental 6622, Recoleta;5.4
+PedidoComida;COM-029;Av. Larraín 5205, La Florida;0.8
+PedidoComida;COM-030;Av. Grecia 7567, Providencia;4.4
+PedidoComida;COM-031;Av. Providencia 9247, Conchalí;2.0
+PedidoComida;COM-032;Av. Walker Martínez 7069, Cerro Navia;2.0
+PedidoComida;COM-033;Santo Domingo 2316, Quilicura;2.8
+PedidoComida;COM-034;Av. Manquehue 821, San Miguel;3.4
 PedidoEncomienda;ENC-001;Av. O'Higgins 3322, Estación Central;5.2;2.5
 PedidoEncomienda;ENC-002;Gran Avenida 4500, San Miguel;8.4;15.0
 PedidoEncomienda;ENC-003;Mapocho 3200, Quinta Normal;3.1;0.8
 PedidoEncomienda;ENC-004;Vicuña Mackenna 150, Providencia;6.5;25.5
 PedidoEncomienda;ENC-005;San Diego 430, Santiago Centro;2.8;5.2
+PedidoEncomienda;ENC-006;Av. José Pedro Alessandri 6966, Pudahuel;2.4;5.9
+PedidoEncomienda;ENC-007;Av. Ossa 8719, Recoleta;1.6;13.5
+PedidoEncomienda;ENC-008;Av. San Pablo 1926, La Cisterna;9.6;30.2
+PedidoEncomienda;ENC-009;Av. Príncipe de Gales 5623, San Miguel;8.9;26.4
+PedidoEncomienda;ENC-010;Av. San Pablo 4365, Quilicura;3.6;5.8
+PedidoEncomienda;ENC-011;Gran Avenida 4939, Maipú;7.8;17.9
+PedidoEncomienda;ENC-012;Av. Independencia 2696, Conchalí;5.5;7.2
+PedidoEncomienda;ENC-013;Av. San Pablo 9863, San Joaquín;9.5;32.3
+PedidoEncomienda;ENC-014;Av. Independencia 5088, Las Condes;5.3;4.2
+PedidoEncomienda;ENC-015;Av. O'Higgins 1453, La Granja;1.5;30.8
+PedidoEncomienda;ENC-016;Av. Manquehue 8777, Lo Espejo;5.3;2.7
+PedidoEncomienda;ENC-017;Av. Vespucio 2755, Recoleta;2.1;23.2
+PedidoEncomienda;ENC-018;Moneda 8885, Lo Espejo;5.7;21.3
+PedidoEncomienda;ENC-019;Av. Pajaritos 6587, La Cisterna;7.5;7.3
+PedidoEncomienda;ENC-020;Av. Pedro de Valdivia 7447, San Miguel;6.8;15.5
+PedidoEncomienda;ENC-021;Matucana 9688, Conchalí;3.2;2.5
+PedidoEncomienda;ENC-022;Catedral 1014, Las Condes;3.0;7.9
+PedidoEncomienda;ENC-023;Av. Matta 1210, Quilicura;1.6;1.4
+PedidoEncomienda;ENC-024;Moneda 8884, Providencia;3.1;23.5
+PedidoEncomienda;ENC-025;Av. Larraín 7794, Las Condes;7.4;30.9
+PedidoEncomienda;ENC-026;Paseo Huérfanos 1595, San Miguel;8.0;28.3
+PedidoEncomienda;ENC-027;Av. Manuel Montt 7701, La Granja;6.9;12.6
+PedidoEncomienda;ENC-028;Av. Rojas Magallanes 1662, Estación Central;1.5;23.0
+PedidoEncomienda;ENC-029;Gran Avenida 4123, La Florida;4.6;12.1
+PedidoEncomienda;ENC-030;Av. Suecia 3056, Recoleta;2.7;15.9
+PedidoEncomienda;ENC-031;Catedral 7310, Conchalí;5.1;30.6
+PedidoEncomienda;ENC-032;Av. Los Leones 291, Santiago Centro;1.9;22.9
+PedidoEncomienda;ENC-033;Agustinas 6708, Renca;9.2;29.7
 PedidoExpress;EXP-001;Agustinas 1200, Santiago Centro;1.2
 PedidoExpress;EXP-002;Bandera 150, Santiago Centro;3.4
 PedidoExpress;EXP-003;Paseo Huérfanos 830, Santiago Centro;0.5
 PedidoExpress;EXP-004;Moneda 1040, Santiago Centro;2.7
 PedidoExpress;EXP-005;Santo Domingo 1300, Santiago Centro;4.1
+PedidoExpress;EXP-006;Av. Grecia 1010, Ñuñoa;3.3
+PedidoExpress;EXP-007;Av. La Florida 4395, Vitacura;2.7
+PedidoExpress;EXP-008;Av. Américo Vespucio 9155, La Cisterna;2.1
+PedidoExpress;EXP-009;San Diego 3161, Independencia;4.8
+PedidoExpress;EXP-010;Av. Brasil 9539, La Granja;1.7
+PedidoExpress;EXP-011;Av. El Bosque 5188, Estación Central;3.7
+PedidoExpress;EXP-012;Av. Salvador 8288, Quilicura;0.7
+PedidoExpress;EXP-013;Av. Tobalaba 1362, Ñuñoa;1.4
+PedidoExpress;EXP-014;Catedral 3903, Peñalolén;0.8
+PedidoExpress;EXP-015;Av. Larraín 4083, Cerro Navia;1.1
+PedidoExpress;EXP-016;Av. Peñalolén 1393, La Reina;4.0
+PedidoExpress;EXP-017;Av. Larraín 8615, San Joaquín;4.4
+PedidoExpress;EXP-018;Moneda 5197, Las Condes;6.1
+PedidoExpress;EXP-019;Vicuña Mackenna 4965, Vitacura;2.0
+PedidoExpress;EXP-020;Av. Manquehue 1238, Quinta Normal;2.3
+PedidoExpress;EXP-021;Av. Larraín 1688, Santiago Centro;3.2
+PedidoExpress;EXP-022;Av. Tobalaba 4395, Providencia;3.7
+PedidoExpress;EXP-023;Catedral 4052, Macul;6.1
+PedidoExpress;EXP-024;Av. Colón 8950, San Bernardo;2.1
+PedidoExpress;EXP-025;Av. Rojas Magallanes 8716, Quinta Normal;2.2
+PedidoExpress;EXP-026;Av. Vespucio 4955, La Cisterna;4.5
+PedidoExpress;EXP-027;Vicuña Mackenna 4383, San Miguel;1.0
+PedidoExpress;EXP-028;Av. El Bosque 9114, Providencia;5.8
+PedidoExpress;EXP-029;Alameda 3500, San Bernardo;2.1
+PedidoExpress;EXP-030;Av. José Pedro Alessandri 4375, Quilicura;2.5
+PedidoExpress;EXP-031;Av. Brasil 1562, Maipú;3.4
+PedidoExpress;EXP-032;Av. Apoquindo 772, Quinta Normal;3.0
+PedidoExpress;EXP-033;Vicuña Mackenna 4341, Ñuñoa;2.4

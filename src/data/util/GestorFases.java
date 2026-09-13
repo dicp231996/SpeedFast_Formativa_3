@@ -1,6 +1,7 @@
 package data.util;
 
 import model.core.Pedido;
+import model.entities.business.ZonaCarga;
 import model.entities.dealer.Repartidor;
 import model.entities.order.PedidoComida;
 
@@ -24,7 +25,8 @@ public class GestorFases {
     public static void ejecutarFaseAsignacion(ArrayList<Pedido> listaPedidos,
                                               ArrayList<Repartidor> listaRepartidores,
                                               ControladorEnvios controlador,
-                                              Scanner scanner) {
+                                              Scanner scanner,
+                                              ZonaCarga zonaCarga) {
 
         System.out.println("--- FASE 1: RESERVA DE PEDIDOS ---");
         System.out.println("1. Automática (El sistema evalúa y asigna bajo sus reglas)");
@@ -39,8 +41,14 @@ public class GestorFases {
         for (Pedido pedido : listaPedidos) {
             System.out.println("\n>> Reservando Pedido ID: " + pedido.getIdPedido());
 
+            // Registro en la Zona de Carga: en este punto el pedido aún está
+            // PENDIENTE, así que solo queda anotado en el historial.
+            zonaCarga.agregarPedido(pedido);
+
             if (esNominal) {
                 asignarNominal(pedido, scanner);
+                // Si quedó CONFIRMADO, recién ahora se habilita para retiro.
+                zonaCarga.agregarPedido(pedido);
                 continue;
             }
 
@@ -49,6 +57,9 @@ public class GestorFases {
             } else {
                 asignarAutomatico(pedido, listaRepartidores);
             }
+
+            // Si quedó CONFIRMADO, recién ahora se habilita para retiro.
+            zonaCarga.agregarPedido(pedido);
         }
     }
 
@@ -73,7 +84,7 @@ public class GestorFases {
         System.out.println("Candidatos disponibles:");
         for (int i = 0; i < candidatosAptos.size(); i++) {
             Repartidor r = candidatosAptos.get(i);
-            System.out.println("  [" + i + "] " + r.getNombreCompleto() + " | Carga actual: " + r.getPedidosAsignados().size());
+            System.out.println("  [" + i + "] " + r.getNombreCompleto() + " | Carga actual: " + r.getCantidadPedidosAsignados() + "/5");
         }
         System.out.print("Ingrese el número del repartidor a reservar: ");
 
@@ -191,7 +202,7 @@ public class GestorFases {
     // =========================================================
     // FASE 4: EJECUCIÓN DE LAS RUTAS (CONCURRENCIA CON ExecutorService)
     // =========================================================
-    public static void ejecutarFaseRutas(ArrayList<Pedido> listaPedidos) {
+    public static void ejecutarFaseRutas(ArrayList<Pedido> listaPedidos, ZonaCarga zonaCarga) {
         System.out.println("\n=========================================");
         System.out.println("--- FASE 4: EJECUCIÓN DE ENTREGAS ---");
         System.out.println("=========================================");
@@ -210,17 +221,23 @@ public class GestorFases {
             return;
         }
 
-        // 2. Creamos un pool con un hilo por repartidor en ruta: cada Repartidor
+        // 2. Vinculamos a todos los repartidores en ruta con la MISMA Zona de
+        //    Carga: es el pool compartido desde donde cada uno retirará el
+        //    siguiente pedido CONFIRMADO disponible.
+        for (Repartidor r : repartidoresEnRuta) {
+            r.setZonaCarga(zonaCarga);
+        }
+
+        // 3. Creamos un pool con un hilo por repartidor en ruta: cada Repartidor
         //    (que implementa Runnable) se ejecuta de forma CONCURRENTE respecto
-        //    a los demás. Dentro de cada uno, sus propios pedidos se siguen
-        //    procesando de manera secuencial (ver Repartidor.run()).
+        //    a los demás, compitiendo por retirar pedidos de la Zona de Carga.
         ExecutorService pool = Executors.newFixedThreadPool(repartidoresEnRuta.size());
 
         for (Repartidor r : repartidoresEnRuta) {
             pool.execute(r);
         }
 
-        // 3. Cerramos el pool y esperamos a que todos los repartidores terminen
+        // 4. Cerramos el pool y esperamos a que todos los repartidores terminen
         //    su recorrido antes de avanzar a la Fase 5 (reportes).
         pool.shutdown();
         try {

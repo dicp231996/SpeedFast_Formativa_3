@@ -4,6 +4,7 @@ import data.util.ControladorEnvios;
 import data.util.GestorFases;
 import data.util.GestorInstancias;
 import model.core.Pedido;
+import model.entities.business.ZonaCarga;
 import model.entities.dealer.Repartidor;
 
 import java.util.ArrayList;
@@ -24,10 +25,15 @@ public class SpeedFast {
         ArrayList<Repartidor> listaRepartidores = GestorInstancias.cargarRepartidores(rutaRepartidores);
         ControladorEnvios controlador = new ControladorEnvios();
 
-        GestorFases.ejecutarFaseAsignacion(listaPedidos, listaRepartidores, controlador, scanner);
+        // Zona de Carga única, compartida entre la Fase 1 (donde los pedidos
+        // se registran y se encolan al quedar CONFIRMADOS) y la Fase 4 (donde
+        // los repartidores compiten por retirarlos).
+        ZonaCarga zonaCarga = new ZonaCarga();
+
+        GestorFases.ejecutarFaseAsignacion(listaPedidos, listaRepartidores, controlador, scanner, zonaCarga);
         GestorFases.ejecutarFaseDespacho(listaPedidos);
         GestorFases.ejecutarFaseCancelaciones(listaPedidos, scanner);
-        GestorFases.ejecutarFaseRutas(listaPedidos);
+        GestorFases.ejecutarFaseRutas(listaPedidos, zonaCarga);
         GestorFases.ejecutarFaseReportes(listaPedidos, controlador);
 
         scanner.close();

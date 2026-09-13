@@ -1,20 +1,31 @@
 package model.entities.dealer;
 
+import data.enumerate.EstadoPedido;
 import data.enumerate.TipoServicio;
 import model.core.Pedido;
 import model.core.Persona;
+import model.entities.business.ZonaCarga;
 import model.interfaces.IRunnable;
-
-import java.util.ArrayList;
 
 // Clase Repartidor hereda de Persona e implementa tanto tu interfaz como la nativa de Java
 public class Repartidor extends Persona implements IRunnable, Runnable {
+
+    // Capacidad máxima de pedidos que un repartidor puede llevar en su mochila.
+    private static final int CAPACIDAD_MAXIMA_PEDIDOS = 5;
 
     private TipoServicio tipoServicio;
     private boolean tieneMochilaTermica;
     private double capacidadPesoMax;
     private boolean estaCercaUbicacion;
-    private ArrayList<Pedido> pedidosAsignados;
+
+    // Vector de tamaño fijo (en vez de ArrayList): solo caben 5 pedidos.
+    private Pedido[] pedidosAsignados;
+    private int cantidadPedidosAsignados;
+
+    // Vínculo con el pool compartido desde donde se retiran los pedidos ya
+    // CONFIRMADOS. Se inyecta antes de lanzar al repartidor en la Fase 4
+    // (ver GestorFases.ejecutarFaseRutas).
+    private ZonaCarga zonaCarga;
 
     public Repartidor() {
         super();
@@ -22,7 +33,8 @@ public class Repartidor extends Persona implements IRunnable, Runnable {
         this.tieneMochilaTermica = false;
         this.capacidadPesoMax = 0.0;
         this.estaCercaUbicacion = false;
-        this.pedidosAsignados = new ArrayList<>();
+        this.pedidosAsignados = new Pedido[CAPACIDAD_MAXIMA_PEDIDOS];
+        this.cantidadPedidosAsignados = 0;
     }
 
     public Repartidor(String nombreCompleto, String telefonoContacto, TipoServicio tipoServicio,
@@ -32,66 +44,131 @@ public class Repartidor extends Persona implements IRunnable, Runnable {
         this.tieneMochilaTermica = tieneMochilaTermica;
         this.capacidadPesoMax = capacidadPesoMax;
         this.estaCercaUbicacion = estaCercaUbicacion;
-        this.pedidosAsignados = new ArrayList<>();
+        this.pedidosAsignados = new Pedido[CAPACIDAD_MAXIMA_PEDIDOS];
+        this.cantidadPedidosAsignados = 0;
     }
 
     // =========================================================
-    // IMPLEMENTACIÓN SECUENCIAL POR REPARTIDOR (UN PEDIDO A LA VEZ),
-    // PERO CADA REPARTIDOR CORRE EN SU PROPIO HILO (ver GestorFases,
-    // que administra el pool de repartidores vía ExecutorService).
+    // VINCULACIÓN CON LA ZONA DE CARGA
+    // =========================================================
+    public void setZonaCarga(ZonaCarga zonaCarga) {
+        this.zonaCarga = zonaCarga;
+    }
+
+    // =========================================================
+    // ORQUESTACIÓN COMPLETA DEL CICLO DE ENTREGA:
+    // Retira, de la Zona de Carga compartida, ÚNICAMENTE los pedidos que le
+    // fueron asignados a este repartidor durante la Fase 1 (el primero que
+    // cumplió validarRequisitos), hasta que ya no le queden disponibles.
+    // Cada repartidor corre en su propio hilo (ver GestorFases, que
+    // administra el pool vía ExecutorService), por lo que varios de ellos
+    // pueden estar retirando y entregando sus propios pedidos en simultáneo.
     // =========================================================
     @Override
     public void run() {
         String nombreHilo = Thread.currentThread().getName();
-        System.out.println("\n>>> [EN RUTA - " + nombreHilo + "] El repartidor " + this.getNombreCompleto()
-                + " inicia su recorrido secuencial.");
+        System.out.println("\n>>> [ZONA DE CARGA - " + nombreHilo + "] " + this.getNombreCompleto()
+                + " comienza a retirar sus pedidos confirmados.");
 
-        if (this.pedidosAsignados.isEmpty()) {
-            System.out.println("    -> No hay pedidos asignados en la mochila.");
+        if (this.zonaCarga == null) {
+            System.out.println("    -> No se ha vinculado ninguna Zona de Carga a este repartidor.");
             return;
         }
 
-        for (Pedido pedido : this.pedidosAsignados) {
-            if (!pedido.isCancelado()) {
-                // Cada pedido se procesa en un HILO REAL (HiloEntrega), pero se espera
-                // su finalización con join() antes de iniciar el siguiente pedido de la
-                // MISMA mochila. Esto preserva la secuencia interna del repartidor sin
-                // dejar de cumplir con el requisito de que HiloEntrega corra en su propio hilo.
-                Thread hiloEntrega = new Thread(new model.valueobjects.HiloEntrega(pedido),
-                        "Entrega-" + pedido.getIdPedido());
-                hiloEntrega.start();
-                try {
-                    hiloEntrega.join();
-                } catch (InterruptedException e) {
-                    System.err.println("-> Alerta: El recorrido de " + this.getNombreCompleto() + " fue interrumpido.");
-                    Thread.currentThread().interrupt();
-                }
-            } else {
-                System.out.println("    -> Omitiendo pedido ID: " + pedido.getIdPedido() + " (Se encuentra CANCELADO).");
-            }
+        Pedido pedido;
+        boolean atendioAlgunPedido = false;
+
+        while ((pedido = this.zonaCarga.retirarPedido(this)) != null) {
+            atendioAlgunPedido = true;
+            procesarEntrega(pedido);
         }
 
-        System.out.println("\n>>> [FIN DE RUTA] " + this.getNombreCompleto() + " ha finalizado su recorrido y liberado su carga.\n");
-        this.limpiarPedidos();
+        if (!atendioAlgunPedido) {
+            System.out.println("    -> No tenía pedidos confirmados disponibles en la zona de carga.");
+        }
+
+        System.out.println("\n>>> [FIN DE RUTA] " + this.getNombreCompleto() + " ha finalizado su recorrido.\n");
+    }
+
+    // Procesa un único pedido propio retirado de la Zona de Carga: lo marca
+    // EN_REPARTO, simula la entrega en un hilo real (HiloEntrega) esperando
+    // su fin con join(), lo que a su vez deja el pedido en ENTREGADO al
+    // finalizar.
+    private void procesarEntrega(Pedido pedido) {
+        if (pedido.isCancelado()) {
+            System.out.println("    -> Pedido " + pedido.getIdPedido() + " fue cancelado antes de iniciar la entrega. Se omite.");
+            return;
+        }
+
+        System.out.println("-> [RETIRO] " + this.getNombreCompleto() + " retira su pedido "
+                + pedido.getIdPedido() + " desde la zona de carga.");
+
+        pedido.nuevoEstado(EstadoPedido.EN_REPARTO);
+
+        Thread hiloEntrega = new Thread(new model.valueobjects.HiloEntrega(pedido),
+                "Entrega-" + pedido.getIdPedido());
+        hiloEntrega.start();
+        try {
+            hiloEntrega.join();
+        } catch (InterruptedException e) {
+            System.err.println("-> Alerta: El recorrido de " + this.getNombreCompleto() + " fue interrumpido.");
+            Thread.currentThread().interrupt();
+        }
     }
 
     // =========================================================
-    // GESTIÓN DE LA LISTA DE PEDIDOS
+    // GESTIÓN DEL VECTOR FIJO DE PEDIDOS (máx. 5 posiciones)
     // =========================================================
-    public ArrayList<Pedido> getPedidosAsignados() {
+    public Pedido[] getPedidosAsignados() {
         return pedidosAsignados;
     }
 
+    public int getCantidadPedidosAsignados() {
+        return cantidadPedidosAsignados;
+    }
+
+    // Indica si aún queda espacio libre en la mochila (menos de 5 pedidos).
+    public boolean tieneCupoDisponible() {
+        return cantidadPedidosAsignados < CAPACIDAD_MAXIMA_PEDIDOS;
+    }
+
     public void agregarPedido(Pedido pedido) {
-        this.pedidosAsignados.add(pedido);
+        if (!tieneCupoDisponible()) {
+            System.out.println("-> Alerta: " + this.getNombreCompleto()
+                    + " ya alcanzó su capacidad máxima de " + CAPACIDAD_MAXIMA_PEDIDOS + " pedidos.");
+            return;
+        }
+        this.pedidosAsignados[cantidadPedidosAsignados] = pedido;
+        cantidadPedidosAsignados++;
     }
 
     public void removerPedido(Pedido pedido) {
-        this.pedidosAsignados.remove(pedido);
+        int indice = -1;
+        for (int i = 0; i < cantidadPedidosAsignados; i++) {
+            if (this.pedidosAsignados[i] == pedido) {
+                indice = i;
+                break;
+            }
+        }
+
+        if (indice == -1) {
+            return; // El pedido no estaba en la mochila de este repartidor
+        }
+
+        // Compactamos el vector: desplazamos una posición a la izquierda
+        // todo lo que venía después del pedido removido.
+        for (int i = indice; i < cantidadPedidosAsignados - 1; i++) {
+            this.pedidosAsignados[i] = this.pedidosAsignados[i + 1];
+        }
+        this.pedidosAsignados[cantidadPedidosAsignados - 1] = null;
+        cantidadPedidosAsignados--;
     }
 
     public void limpiarPedidos() {
-        this.pedidosAsignados.clear();
+        for (int i = 0; i < cantidadPedidosAsignados; i++) {
+            this.pedidosAsignados[i] = null;
+        }
+        cantidadPedidosAsignados = 0;
     }
 
     // Puente para evitar errores de visibilidad en el Main
@@ -120,7 +197,8 @@ public class Repartidor extends Persona implements IRunnable, Runnable {
                 .append("\n      | Mochila Térmica: ").append(this.tieneMochilaTermica ? "Sí" : "No")
                 .append("\n      | Capacidad Máx: ").append(this.capacidadPesoMax).append(" kg")
                 .append("\n      | Cerca de ubicación: ").append(this.estaCercaUbicacion ? "Sí" : "No")
-                .append("\n      | Carga actual: ").append(this.pedidosAsignados.size()).append(" pedidos asignados");
+                .append("\n      | Carga actual: ").append(this.cantidadPedidosAsignados)
+                .append("/").append(CAPACIDAD_MAXIMA_PEDIDOS).append(" pedidos asignados");
         return sb.toString();
     }
 }

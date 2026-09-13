@@ -20,7 +20,7 @@ public class PedidoExpress extends Pedido {
     @Override
     public boolean validarRequisitos(Repartidor candidato) {
         return candidato.getTipoServicio() == data.enumerate.TipoServicio.COMPRA_EXPRESS &&
-                candidato.getPedidosAsignados().size() < 10;
+                candidato.tieneCupoDisponible();
     }
 
     // =========================================================
